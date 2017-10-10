@@ -2,21 +2,20 @@ package com.example.kunal.myscope;
 
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.graphics.Canvas;
+import android.graphics.PorterDuff;
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +31,8 @@ public class MainActivity extends Activity {
     private static final int DIGISPARK_VID = 0x16C0;
     private static final int DIGISPARK_PID = 0x05DF;
     private static final int REQ_USB_PERMISSION = 1;
+
+    private ChartView chart;
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -55,6 +56,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        chart = (ChartView) findViewById(R.id.surface_view);
+        chart.init();
 
         UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
         HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
@@ -86,7 +90,6 @@ public class MainActivity extends Activity {
             UsbDevice device = params[0];
             UsbManager manager = (UsbManager) MainActivity.this.getSystemService(Context.USB_SERVICE);
             UsbDeviceConnection cnx = manager.openDevice(device);
-            // handle openDevice failure as needed for your application
             byte buffer[] = new byte[2];
             while (!isCancelled()) {
                 //int requesttype, int request, int value, int index, char *bytes, int size, int timeout
@@ -101,6 +104,7 @@ public class MainActivity extends Activity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
+            chart.addPoint(values[0]);
             Log.i(TAG, "Value : "+ values[0]);
         }
     }
@@ -118,4 +122,5 @@ public class MainActivity extends Activity {
         mCalibTask = new CalibrationTask();
         mCalibTask.execute(device);
     }
+
 }
